@@ -114,7 +114,7 @@ def SOM(X,cantFilas,cantColumnas):
     neuronasFinales = np.copy(neuronas)
     return neuronasIniciales,neuronasFinales
 
-XTrain = pd.read_csv('icgtp2datos/te.csv', header=None).to_numpy()
+XTrain = pd.read_csv('datos/te.csv', header=None).to_numpy()
 cantFilas = 10
 cantColumnas = 10
 neuronasI,neuronasF = SOM(XTrain,cantFilas,cantColumnas)
