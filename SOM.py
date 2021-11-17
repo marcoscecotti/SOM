@@ -1,79 +1,177 @@
 import numpy as np
-from math import dist
 import pandas as pd
+import matplotlib.pyplot as plt
 
-df  = pd.read_csv('guia2/circulo.csv', header=None)
+def SOM(X,cantFilas,cantColumnas):
+    cantEntradas = len(X)
 
+    #1- Inicialización: Elijo aleatoriamente las neuronas
+    cantNeuronas = cantFilas * cantColumnas
+    indicesNeuronas = np.random.randint(0,cantEntradas,cantNeuronas)
+    neuronas = np.zeros((cantFilas,cantColumnas,len(X[0])))
+    k = 0
+    for i in range(cantFilas):
+        for j in range(cantColumnas):
+            neuronas[i][j][:] = X[indicesNeuronas[k]]
+            k+=1
 
-# Definicion
-x           = df.to_numpy()
+    neuronasIniciales = np.copy(neuronas)
 
+    it = 0
+    maxIt = 10
+    entorno = 3
+    tasaAprendizaje = 0.9
+    while it < maxIt:
+        #Para cada patron:
+        for i in range(cantEntradas):
+            # 2- Selección del ganador:
+            # Calculo la neurona con pesos mas parecidos al patron de entrada
+            distancias = np.zeros((cantFilas,cantColumnas))
+            for j in range(cantFilas):
+                for k in range(cantColumnas):
+                    distancias[j][k] = np.linalg.norm(X[i][:] - neuronas[j][k][:])
+            neuronaMin = np.unravel_index(distancias.argmin(),distancias.shape) #Pos. de la neurona
 
-dimRed      = [5, 5]  # 10x10
-etapas      = [750, 1000, 3000]
-n           = 0  # Contador de etapas
-epoca       = 0  # Contador de epoca
-corriendo   = True
-entorno     = 2
+            #3- Defino qué neuronas se van a actualizar según la vecindad:
+            vecinas=[]
+            contador = 0
+            for j in range(cantFilas):
+                for k in range(cantColumnas):
+                    distancia = abs(neuronaMin[0]-j) + abs(neuronaMin[1]-k)
+                    if distancia <= entorno:
+                        vecinas.insert(contador,(j,k))
 
+            #4- Adaptación de los pesos para la neurona ganadora y sus vecinas
+            for j in range(len(vecinas)):
+                posicion = vecinas[j]
+                neuronas[posicion][:] = neuronas[posicion][:] + tasaAprendizaje*(X[i][:]-neuronas[posicion][:])
+        it+=1
 
-def tasa_apren(epoca, n, etp):
-    if n == 0:
-        return 0.9
-    if n == 1:
-        return (0.01 - 0.9) * epoca / etp[1]
-    return 0.01
+    def tasa_apren(epoca):
+        return (-0.8/200)*epoca + 0.9
 
+    def neighbours(epoca):
+        return (-2/200)*epoca + 3
+    it = 0
+    maxIt = 20
+    while it < maxIt:
+        # Para cada patron:
+        for i in range(cantEntradas):
+            # 2- Selección del ganador:
+            # Calculo la neurona con pesos mas parecidos al patron de entrada
+            distancias = np.zeros((cantFilas, cantColumnas))
+            for j in range(cantFilas):
+                for k in range(cantColumnas):
+                    distancias[j][k] = np.linalg.norm(X[i][:] - neuronas[j][k][:])
+            neuronaMin = np.unravel_index(distancias.argmin(), distancias.shape)  # Pos. de la neurona
 
-# def entorno(epoca, n, etp):  # o vecindad
-#     if n == 0:
-#         return 0.9
-#     if n == 1:
-#         return (0.01 - 0.9) * epoca / etp[1]
-#     return 0.01
+            # 3- Defino qué neuronas se van a actualizar según la vecindad:
+            vecinas = []
+            contador = 0
+            for j in range(cantFilas):
+                for k in range(cantColumnas):
+                    distancia = abs(neuronaMin[0] - j) + abs(neuronaMin[1] - k)
+                    if distancia <= neighbours(it):
+                        vecinas.insert(contador,(j,k))
 
+            # 4- Adaptación de los pesos para la neurona ganadora y sus vecinas
+            for j in range(len(vecinas)):
+                posicion = vecinas[j]
+                neuronas[posicion][:] = neuronas[posicion][:] + tasa_apren(it) * (X[i][:] - neuronas[posicion][:])
 
-def neighbors(a, radius, rowNumber, columnNumber):
-    return [[a[i][j] if i >= 0 and i < len(a) and j >= 0 and j < len(a[0]) else 0
-             for j in range(columnNumber - 1 - radius, columnNumber + radius)]
-            for i in range(rowNumber - 1 - radius, rowNumber + radius)]
+        it+=1
 
+    it = 0
+    maxIt = 60
+    entorno = 0
+    tasaAprendizaje = 0.1
+    while it < maxIt:
+        # Para cada patron:
+        for i in range(cantEntradas):
+            # 2- Selección del ganador:
+            # Calculo la neurona con pesos mas parecidos al patron de entrada
+            distancias = np.zeros((cantFilas, cantColumnas))
+            for j in range(cantFilas):
+                for k in range(cantColumnas):
+                    distancias[j][k] = np.linalg.norm(X[i][:] - neuronas[j][k][:])
+            neuronaMin = np.unravel_index(distancias.argmin(), distancias.shape)  # Pos. de la neurona
 
-while epoca < etapas[n] and corriendo:
+            # 3- Defino qué neuronas se van a actualizar según la vecindad:
+            vecinas = []
+            contador = 0
+            for j in range(cantFilas):
+                for k in range(cantColumnas):
+                    distancia = abs(neuronaMin[0] - j) + abs(neuronaMin[1] - k)
+                    if distancia <= entorno:
+                        vecinas.insert(contador,(j,k))
 
-    # Genero mis pesos
-    cantEnt = len(x[0])
-    w = np.random.rand(dimRed[0], dimRed[1], cantEnt)
+            # 4- Adaptación de los pesos para la neurona ganadora y sus vecinas
+            for j in range(len(vecinas)):
+                posicion = vecinas[j]
+                neuronas[posicion][:] = neuronas[posicion][:] + tasaAprendizaje * (X[i][:] - neuronas[posicion][:])
+        it += 1
 
-    # Recorro cada una de mis entradas y comparo
-    ganadoras = []
-    for e in range(len(x)):
-        # en cada x[i] tengo mi entrada (tupla) que tengo que sacar la dist menor con w[j]
-        distEntradasAPesos = []
-        for i in range(0, len(w)):
-            for j in range(0, len(w[i])):
-                distAux = dist(x[e], w[i][j])
-                distEntradasAPesos.append([distAux, i, j])
-        # En este punto tengo la neurona ganadora
-        menorPeso = sorted(distEntradasAPesos, key=lambda l: l[0])[0]
-        ganadoras.append([menorPeso[1], menorPeso[2]]) # Guardo fila y columna del menor peso
+    neuronasFinales = np.copy(neuronas)
+    return neuronasIniciales,neuronasFinales
 
-    # Entorno
-    for g in range(len(ganadoras)):
-        for i in range(0, len(w)):
-            for j in range(0, len(w[i])):
-                distAux = dist(ganadoras[g], [i, j])
-                if distAux < entorno:
-                    # Reajusto el peso
-                    print("En la posición ", i, ",", j, " del entorno ", ganadoras[g] )
+XTrain = pd.read_csv('icgtp2datos/te.csv', header=None).to_numpy()
+cantFilas = 10
+cantColumnas = 10
+neuronasI,neuronasF = SOM(XTrain,cantFilas,cantColumnas)
+cantEntradas = len(XTrain)
 
-    # Recorro cada uno de mis pesos y me fijo cual es el mas cercano
-    minSuma = w.max()
-    minIndex = np.unravel_index(np.argmax(w, axis=None), w.shape)
+plt.figure(1)
+for i in range(cantEntradas):
+    plt.plot(XTrain[i][0], XTrain[i][1], marker='.', color='black')
 
+for i in range(cantFilas):
+    for j in range(cantColumnas):
+        plt.plot(neuronasI[i][j][0], neuronasI[i][j][1], marker='o', color='blue')
 
-    epoca = epoca + 1
-    if epoca == etapas[n]:
-        n = n + 1  # Voy a la siguiente etapa
-        if n > 3:
-            corriendo = False
+for i in range(cantFilas):
+    for j in range(cantColumnas):
+        if i - 1 >= 0:
+            x_values = [neuronasI[i][j][0], neuronasI[i - 1][j][0]]
+            y_values = [neuronasI[i][j][1], neuronasI[i - 1][j][1]]
+            plt.plot(x_values, y_values)
+        if j - 1 >= 0:
+            x_values = [neuronasI[i][j][0], neuronasI[i][j - 1][0]]
+            y_values = [neuronasI[i][j][1], neuronasI[i][j - 1][1]]
+            plt.plot(x_values, y_values)
+        if i + 1 <= cantFilas - 1:
+            x_values = [neuronasI[i][j][0], neuronasI[i + 1][j][0]]
+            y_values = [neuronasI[i][j][1], neuronasI[i + 1][j][1]]
+            plt.plot(x_values, y_values)
+        if j + 1 <= cantColumnas - 1:
+            x_values = [neuronasI[i][j][0], neuronasI[i][j + 1][0]]
+            y_values = [neuronasI[i][j][1], neuronasI[i][j + 1][1]]
+            plt.plot(x_values, y_values)
+
+plt.figure(2)
+for i in range(cantEntradas):
+    plt.plot(XTrain[i][0], XTrain[i][1], marker='.', color='black')
+
+for i in range(cantFilas):
+    for j in range(cantColumnas):
+        plt.plot(neuronasF[i][j][0], neuronasF[i][j][1], marker='+', color='red')
+
+for i in range(cantFilas):
+    for j in range(cantColumnas):
+        if i - 1 >= 0:
+            x_values = [neuronasF[i][j][0], neuronasF[i - 1][j][0]]
+            y_values = [neuronasF[i][j][1], neuronasF[i - 1][j][1]]
+            plt.plot(x_values, y_values)
+        if j - 1 >= 0:
+            x_values = [neuronasF[i][j][0], neuronasF[i][j - 1][0]]
+            y_values = [neuronasF[i][j][1], neuronasF[i][j - 1][1]]
+            plt.plot(x_values, y_values)
+        if i + 1 <= cantFilas - 1:
+            x_values = [neuronasF[i][j][0], neuronasF[i + 1][j][0]]
+            y_values = [neuronasF[i][j][1], neuronasF[i + 1][j][1]]
+            plt.plot(x_values, y_values)
+        if j + 1 <= cantColumnas - 1:
+            x_values = [neuronasF[i][j][0], neuronasF[i][j + 1][0]]
+            y_values = [neuronasF[i][j][1], neuronasF[i][j + 1][1]]
+            plt.plot(x_values, y_values)
+
+plt.show()
