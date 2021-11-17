@@ -18,7 +18,7 @@ def SOM(X,cantFilas,cantColumnas):
     neuronasIniciales = np.copy(neuronas)
 
     it = 0
-    maxIt = 10
+    maxIt = 100
     entorno = 3
     tasaAprendizaje = 0.9
     while it < maxIt:
@@ -53,7 +53,7 @@ def SOM(X,cantFilas,cantColumnas):
     def neighbours(epoca):
         return (-2/200)*epoca + 3
     it = 0
-    maxIt = 20
+    maxIt = 200
     while it < maxIt:
         # Para cada patron:
         for i in range(cantEntradas):
@@ -82,7 +82,7 @@ def SOM(X,cantFilas,cantColumnas):
         it+=1
 
     it = 0
-    maxIt = 60
+    maxIt = 600
     entorno = 0
     tasaAprendizaje = 0.1
     while it < maxIt:
